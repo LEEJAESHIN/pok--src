@@ -1,7 +1,7 @@
 'use client'
 import { Input } from "@/components/ui/input";
 import { Search, ArrowRight } from "lucide-react";
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { getChoseong } from 'es-hangul';
 import Image from "next/image";
 import pokeList from '../lib/data/pokemon-name-map.json'
@@ -17,6 +17,7 @@ export default function Home() {
     koreanName: string;
     sprite: string;
   }>>([])
+  const searchContainerRef = useRef<HTMLDivElement>(null)
 
   // useMemo로 검색 결과 계산 (searchQuery가 변경될 때만 재계산)
   const gachaPoke = useMemo(() => {
@@ -60,23 +61,47 @@ export default function Home() {
     fetchTodaysPokemon();
   }, []);
 
+  // 외부 클릭 감지
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
+        setSearchQuery('');
+      }
+    }
+
+    if (gachaPoke.length > 0) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [gachaPoke.length]);
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
       <main
-        className="flex min-h-screen w-full max-w-3xl flex-col items-center pt-32 px-16 bg-cover bg-no-repeat dark:bg-black sm:items-start"
+        className="flex min-h-screen w-full max-w-3xl flex-col items-center pt-16 px-8 bg-cover bg-no-repeat dark:bg-black sm:items-start"
       >
         <div className="flex w-full items-center justify-center mb-8">
           <Image src="/PokeSrc_logo.png" alt="PokéSrc Logo" width={270} height={90} priority />
         </div>
-        <div className="relative w-full">
+        <div className="relative w-full" ref={searchContainerRef}>
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 z-10" size={20} />
-          <form action="/search" method="get">
+          <form action="/search" method="get" className="relative">
             <Input
               name="q"
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="bg-white rounded-full px-6 py-3 pl-12 w-full"
+              autoComplete="off"
+              className="bg-white rounded-full px-6 py-3 pl-12 pr-12 w-full"
               placeholder="포켓몬 이름 또는 초성을 검색하세요. (예: 피카츄, ㅍㅋㅊ)"
             />
+            {/* <button
+              type="submit"
+              className="absolute right-3 top-1/2 -translate-y-1/2 bg-blue-500 hover:bg-blue-600 text-white rounded-full px-3 py-1 text-xs font-medium transition-colors z-10"
+            >
+              검색
+            </button> */}
           </form>
           {gachaPoke.length > 0 && (
             <Card className="absolute top-full mt-2 w-full shadow-2xl border-0 bg-white/95 backdrop-blur-sm overflow-hidden animate-slide-down z-50 max-h-[400px]">
@@ -91,7 +116,7 @@ export default function Home() {
                       input.value = pokemon;
                       form.submit();
                     }}
-                    className="w-full px-6 py-4 text-left hover:bg-blue-50 transition-colors flex items-center justify-between group border-b last:border-b-0 border-gray-100"
+                    className="w-full px-6 py-2.5 text-left hover:bg-blue-50 transition-colors flex items-center justify-between group border-b last:border-b-0 border-gray-100"
                   >
                     <div>
                       <div className="text-gray-900 font-medium">{pokemon}</div>
@@ -107,7 +132,7 @@ export default function Home() {
 
         {/* 오늘의 포켓몬 섹션 */}
         <div className="w-full mt-12">
-          <h2 className="text-2xl font-bold mb-6 text-gray-800">오늘의 포켓몬</h2>
+          <h2 className="text-2xl font-bold mb-6 text-gray-800">오늘의 포켓몬은?</h2>
           {todaysPokemon.length === 0 ? (
             <div className="text-center text-gray-500">로딩 중...</div>
           ) : (
