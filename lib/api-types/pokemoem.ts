@@ -31,5 +31,5 @@ export interface CompetitiveRecommendations {
   abilities: Array<{ name: string; usage: number }>;
   natures: Array<{ name: string; usage: number }>;
   items: Array<{ name: string; usage: number }>;
-  moves: Array<{ name: string; usage: number }>;
+  moves: Array<{ name: string; usage: number; type: string }>;
 }

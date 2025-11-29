@@ -357,9 +357,19 @@ export default async function SearchPage({
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {competitiveStats.moves.map((move, idx) => (
-                    <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <span className="capitalize font-medium">{move.name}</span>
-                      <span className="text-sm text-gray-500">{move.usage.toFixed(1)}%</span>
+                    <div
+                      key={idx}
+                      className="flex items-center gap-3 p-3 rounded-lg border-2"
+                      style={{ borderColor: getTypeColor(move.type) }}
+                    >
+                      <Image
+                        src={`/poke-types/${move.type}.svg`}
+                        alt={move.type}
+                        width={20}
+                        height={20}
+                      />
+                      <span className="flex-1 font-medium text-gray-900">{move.name}</span>
+                      <span className="text-sm text-gray-600">{move.usage.toFixed(1)}%</span>
                     </div>
                   ))}
                 </div>

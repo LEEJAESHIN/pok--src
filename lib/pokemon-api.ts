@@ -100,6 +100,27 @@ async function getItemNameFromPokemoem(itemId: string): Promise<string> {
   }
 }
 
+// Move 상세 정보 가져오기 (한글 이름 + 타입)
+async function getMoveDetails(moveId: string): Promise<{ name: string; type: string } | null> {
+  try {
+    const response = await fetch(`${BASE_URL}/move/${moveId}`, {
+      next: { revalidate: 86400 }, // 24시간 캐시
+    });
+    if (!response.ok) return null;
+    const data = await response.json();
+
+    // 한글 이름 찾기
+    const koreanName = data.names?.find((n: any) => n.language.name === "ko");
+
+    return {
+      name: koreanName?.name || data.name || moveId,
+      type: data.type.name, // 타입 정보 추가
+    };
+  } catch {
+    return null;
+  }
+}
+
 // 오늘의 포켓몬 랜덤 6마리 가져오기 (날짜 기반 시드)
 export async function getTodaysPokemon(): Promise<Array<{ id: number; name: string; koreanName: string; sprite: string }>> {
   try {
@@ -188,13 +209,17 @@ export async function getCompetitiveStats(
         usage: parseFloat(item.val),
       }));
 
-    // 상위 4개 기술 (ID -> 한글 이름 변환)
+    // 상위 4개 기술 (ID -> 한글 이름 + 타입 변환)
     const movesPromises = data.moves
       .slice(0, 4)
-      .map(async (item) => ({
-        name: await getKoreanNameFromPokeAPI("move", item.id),
-        usage: parseFloat(item.val),
-      }));
+      .map(async (item) => {
+        const moveDetails = await getMoveDetails(item.id);
+        return {
+          name: moveDetails?.name || item.id,
+          type: moveDetails?.type || "normal",
+          usage: parseFloat(item.val),
+        };
+      });
 
     const [abilities, natures, items, moves] = await Promise.all([
       Promise.all(abilitiesPromises),
